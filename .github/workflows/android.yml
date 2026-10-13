@@ -1,17 +1,18 @@
 
-name: Build Android APK
+name: Build GoGoGo APK
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "main" ]
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Java
@@ -20,15 +21,30 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Grant execute permission
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager "platforms;android-32" \
+            "build-tools;36.0.0" \
+            "ndk;26.2.11394342"
+
+      - name: Fix Linux keystore paths
+        run: |
+          sed -i 's#..\\\\keystore\\\\GoGoGo.jks#../keystore/GoGoGo.jks#g' app/build.gradle
+          sed -i "s#..\\\\keystore\\\\GoGoGo.jks#../keystore/GoGoGo.jks#g" app/build.gradle
+          grep -n 'storeFile' app/build.gradle
+
+      - name: Grant permission
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew --no-daemon assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-debug-apk
+          name: GoGoGo-APK
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
