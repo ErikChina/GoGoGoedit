@@ -36,6 +36,9 @@ jobs:
           sed -i "s#..\\\\keystore\\\\GoGoGo.jks#../keystore/GoGoGo.jks#g" app/build.gradle
           grep -n 'storeFile' app/build.gradle
 
+      - name: Create local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
       - name: Grant permission
         run: chmod +x gradlew
 
